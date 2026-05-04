@@ -1,1 +1,0 @@
-# afb-paper-trading-app
