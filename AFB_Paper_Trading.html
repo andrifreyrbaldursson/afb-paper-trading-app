@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AFB Viðskipti">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="description" content="AFB Paper Trading - Live market data with paper trading simulator">
+    <title>AFB Viðskipti</title>
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22AFB%20Paper%20Trading%22,%22short_name%22:%22AFB%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230d1117%22,%22theme_color%22:%22%2358a6ff%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20192%20192%27%3E%3Crect%20fill=%27%2358a6ff%27%20width=%27192%27%20height=%27192%27/%3E%3Ctext%20x=%2796%27%20y=%27140%27%20font-size=%27120%27%20font-weight=%27bold%27%20fill=%27%23000%27%20text-anchor=%27middle%27%3EAFB%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22192x192%22,%22type%22:%22image/svg+xml%22}]}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%2358a6ff' width='32' height='32'/><text x='16' y='24' font-size='20' font-weight='bold' fill='%23000' text-anchor='middle'>A</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%2358a6ff' width='180' height='180'/><text x='90' y='135' font-size='100' font-weight='bold' fill='%23000' text-anchor='middle'>AFB</text></svg>">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --border: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --green: #3fb950;
+            --red: #f85149;
+            --blue: #58a6ff;
+            --yellow: #d29922;
+            color-scheme: dark;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            padding-top: max(0px, env(safe-area-inset-top));
+            padding-bottom: max(70px, env(safe-area-inset-bottom));
+        }
+
+        .page {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 16px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .page.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .positive {
+            color: var(--green);
+        }
+
+        .negative {
+            color: var(--red);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .btn-primary {
+            background: var(--blue);
+            color: #000;
+        }
+
+        .btn-primary:active {
+            opacity: 0.8;
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:active {
+            background: var(--border);
+        }
+
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--blue);
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1);
+        }
+
+        .bottom-tabs {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: max(70px, calc(56px + env(safe-area-inset-bottom)));
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
+        }
+
+        .tab-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 4px;
+            border: none;
+            background: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 12px;
+            transition: color 0.2s ease;
+            min-height: 44px;
+        }
+
+        .tab-button.active {
+            color: var(--blue);
+        }
+
+        .tab-icon {
+            font-size: 20px;
+        }
+
+        .gauge-container {
+            width: 100%;
+            max-width: 300px;
+            margin: 20px auto;
+        }
+
+        canvas {
+            max-width: 100%;
+        }
+
+        .gauge-label {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .holding-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .holding-row:last-child {
+            border-bottom: none;
+        }
+
+        .holding-info {
+            flex: 1;
+        }
+
+        .holding-ticker {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .holding-qty {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .holding-price {
+            text-align: right;
+        }
+
+        .holding-current {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .holding-change {
+            font-size: 12px;
+        }
+
+        .news-item {
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .news-item:active {
+            opacity: 0.7;
+        }
+
+        .news-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .news-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            background: var(--green);
+        }
+
+        .status-indicator.offline {
+            background: var(--red);
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 12px 16px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            z-index: 200;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateX(-50%) translateY(20px); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--blue);
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .trade-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-row .btn {
+            flex: 1;
+        }
+
+        .timestamp {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: right;
+            margin-top: 8px;
+        }
+
+        .fear-greed-value {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--blue);
+            margin: 12px 0;
+        }
+
+        .fear-greed-text {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .trade-history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            padding: 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .history-type {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        .history-buy {
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--green);
+        }
+
+        .history-sell {
+            background: rgba(248, 81, 73, 0.2);
+            color: var(--red);
+        }
+
+        .history-details {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .mt-12 {
+            margin-top: 12px;
+        }
+
+        .mb-12 {
+            margin-bottom: 12px;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        @media (max-width: 480px) {
+            .card {
+                padding: 12px;
+            }
+
+            .card-value {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Overview Page -->
+        <div id="page-overview" class="page active">
+            <div class="header">
+                <h1 style="font-size: 20px;">AFB Viðskipti</h1>
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                    <span class="status-indicator" id="status-indicator"></span>
+                    <span id="status-text">Tengt</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Heildarverðmæti</div>
+                <div class="card-value" id="total-value">-</div>
+                <div class="stat-row mt-12" style="border-bottom: none; padding-top: 0;">
+                    <span class="stat-label">Raunveruleg eignir</span>
+                    <span class="stat-value" id="real-value">-</span>
+                </div>
+                <div class="stat-row" style="padding-bottom: 0;">
+                    <span class="stat-label">Pappírsviðskipti</span>
+                    <span class="stat-value" id="paper-value">-</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <canvas id="portfolio-chart"></canvas>
+                <div class="timestamp" id="chart-timestamp"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Ótti og græðgi vísitala</div>
+                <div id="fear-greed-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Markaðsupplýsingar</div>
+                <div class="stat-row">
+                    <span class="stat-label">Virkir viðskipti</span>
+                    <span class="stat-value" id="active-trades">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Heildar ávöxtun</span>
+                    <span class="stat-value" id="total-return">+0%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Endurfjarðað</span>
+                    <span class="stat-value positive" id="paper-cash">€50.000,00</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Holdings Page -->
+        <div id="page-holdings" class="page">
+            <div class="header">
+                <h1 style="font-size: 20px;">Eignir</h1>
+                <button class="btn btn-secondary btn-small" onclick="refreshPrices()" title="Endurlesa verð">⟳</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Raunveruleg eignir</div>
+                <div id="real-holdings-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Pappírsviðskipti eignir</div>
+                <div id="paper-holdings-container"></div>
+            </div>
+        </div>
+
+        <!-- Trade Page -->
+        <div id="page-trade" class="page">
+            <div class="header">
+                <h1 style="font-size: 20px;">Viðskipti</h1>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Kaupa eða selja</div>
+                <div class="trade-form">
+                    <div class="input-group">
+                        <label>Hlutabréf (t.d. AAPL, ASML.AS)</label>
+                        <input type="text" id="trade-ticker" placeholder="AAPL" style="text-transform: uppercase;">
+                    </div>
+
+                    <div style="display: flex; gap: 8px;">
+                        <div class="input-group" style="flex: 1;">
+                            <label>Fjöldi</label>
+                            <input type="number" id="trade-qty" placeholder="1" min="0.001" step="0.001">
+                        </div>
+                        <div class="input-group" style="flex: 1;">
+                            <label>Verð (€)</label>
+                            <input type="number" id="trade-price" placeholder="0.00" step="0.01">
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="lookupPrice()" style="width: 100%;">⟳ Fletta upp verði</button>
+
+                    <div class="btn-row">
+                        <button class="btn btn-primary" onclick="executeTrade('buy')">Kaupa</button>
+                        <button class="btn btn-secondary" onclick="executeTrade('sell')">Selja</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Endurfjarðað</div>
+                <div class="card-value" id="available-cash" style="color: var(--green);">€50.000,00</div>
+            </div>
+
+            <div id="recent-trades" class="card" style="display: none;">
+                <div class="card-title">Síðustu viðskipti</div>
+                <div id="recent-trades-list"></div>
+            </div>
+        </div>
+
+        <!-- Market Page -->
+        <div id="page-market" class="page">
+            <div class="header">
+                <h1 style="font-size: 20px;">Markaður</h1>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Ótti og græðgi vísitala</div>
+                <div id="market-fear-greed-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Fréttir</div>
+                <div id="news-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Page -->
+        <div id="page-history" class="page">
+            <div class="header">
+                <h1 style="font-size: 20px;">Saga</h1>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Tölfræði</div>
+                <div class="stat-row">
+                    <span class="stat-label">Heildarviðskipti</span>
+                    <span class="stat-value" id="total-trades">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Sigrar</span>
+                    <span class="stat-value positive" id="wins-count">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Tap</span>
+                    <span class="stat-value negative" id="losses-count">0</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Sigurahlutfall</span>
+                    <span class="stat-value" id="win-rate">0%</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Heildar P&L</span>
+                    <span class="stat-value" id="total-pnl">€0,00</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Viðskiptasaga</div>
+                <div class="trade-history" id="trade-history-container"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Stillingar</div>
+                <button class="btn btn-secondary" onclick="exportData()" style="width: 100%; margin-bottom: 8px;">Flytja út gögn</button>
+                <button class="btn btn-secondary" onclick="clearAllData()" style="width: 100%;">Eyða öllum gögnum</button>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-tabs">
+            <button class="tab-button active" onclick="switchPage('overview')">
+                <span class="tab-icon">📊</span>
+                <span>Yfirlit</span>
+            </button>
+            <button class="tab-button" onclick="switchPage('holdings')">
+                <span class="tab-icon">💼</span>
+                <span>Eignir</span>
+            </button>
+            <button class="tab-button" onclick="switchPage('trade')">
+                <span class="tab-icon">🔄</span>
+                <span>Viðskipti</span>
+            </button>
+            <button class="tab-button" onclick="switchPage('market')">
+                <span class="tab-icon">📰</span>
+                <span>Markaður</span>
+            </button>
+            <button class="tab-button" onclick="switchPage('history')">
+                <span class="tab-icon">📜</span>
+                <span>Saga</span>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const REAL_PORTFOLIO = {
+            'AFB Growth Fund': {
+                'GOOGL': 1, 'NVDA': 1, 'AAPL': 1, 'ASML': 1, 'AVGO': 1, 'MSFT': 1, 'TSM': 1, 'AMZN': 1, 'AMD': 1, 'PLTR': 1,
+                'AXP': 1, 'CRWD': 1, 'JNJ': 1, 'JPM': 1, 'META': 1, 'MU': 1, 'NVO': 1, 'UNH': 1, 'URNM': 1, 'WMT': 1,
+                'LMT': 1, 'PEP': 1, 'RR.L': 1, 'TEM': 1, 'VST': 1, 'KO': 1
+            },
+            'AI Long Term': {
+                'MU': 1, 'LRCX': 1, 'RKLB': 1, 'TSM': 1, 'ONDS': 1, 'CAMT': 1, 'UUUU': 1, 'KTOS': 1, 'TOELY': 1, 'UBER': 1,
+                'GEHC': 1, 'FROG': 1, 'NOK': 1, 'ORCL': 1, 'RR': 1, 'CEG': 1, 'ALAB': 1, 'BBAI': 1, 'BITM': 1, 'NBIS': 1,
+                'PEGA': 1, 'SNOW': 1
+            },
+            'AFB Safe Fund': {
+                'VUSA': 1, 'VWRL': 1, 'EQQQ': 1, 'ICLN': 1, 'IWDP': 1, 'IHCS': 1
+            },
+            'Standalone': {
+                'RR': 1, 'OPEN': 1
+            }
+        };
+
+        const REAL_PRICES = {
+            'GOOGL': 288.78, 'NVDA': 269.21, 'AAPL': 179.54, 'ASML': 184.46, 'AVGO': 234.28, 'MSFT': 182.57,
+            'TSM': 215.85, 'AMZN': 177.99, 'AMD': 218.33, 'PLTR': 132.78, 'AXP': 81.04, 'CRWD': 99.07,
+            'JNJ': 83.95, 'JPM': 89.34, 'META': 81.20, 'MU': 131.04, 'NVO': 88.53, 'UNH': 118.67,
+            'URNM': 88.93, 'WMT': 90.06, 'LMT': 49.81, 'PEP': 55.08, 'RR.L': 58.25, 'TEM': 61.47,
+            'VST': 64.37, 'KO': 29.29, 'LRCX': 35.42, 'RKLB': 33.96, 'ONDS': 28.43, 'CAMT': 23.24,
+            'UUUU': 19.47, 'KTOS': 13.15, 'TOELY': 21.87, 'UBER': 18.60, 'GEHC': 10.95, 'FROG': 14.40,
+            'NOK': 28.40, 'ORCL': 18.20, 'RR': 11.40, 'CEG': 13.41, 'ALAB': 10.47, 'BBAI': 6.37,
+            'BITM': 8.69, 'NBIS': 12.80, 'PEGA': 6.67, 'SNOW': 6.31, 'VUSA': 122.03, 'VWRL': 104.15,
+            'EQQQ': 73.10, 'ICLN': 26.84, 'IWDP': 13.58, 'IHCS': 12.28, 'OPEN': 1.33
+        };
+
+        let appState = {
+            paperCash: 50000,
+            paperPositions: {},
+            trades: [],
+            priceCache: { ...REAL_PRICES },
+            lastPriceUpdate: Date.now(),
+            fearGreedCache: null,
+            lastFearGreedUpdate: 0,
+            newsCache: [],
+            lastNewsUpdate: 0
+        };
+
+        let portfolioChart = null;
+
+        function init() {
+            loadState();
+            setupServiceWorker();
+            setupEventListeners();
+            updateAllData();
+            setInterval(updateAllData, 60000);
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('appState');
+            if (saved) {
+                try {
+                    const loaded = JSON.parse(saved);
+                    appState = { ...appState, ...loaded };
+                } catch (e) {
+                    console.error('Failed to load state:', e);
+                }
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('appState', JSON.stringify(appState));
+        }
+
+        function setupServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                const sw = `
+const CACHE_NAME = 'afb-v1';
+const urlsToCache = ['/'];
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache).catch(() => {})));
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(cacheNames => {
+    return Promise.all(cacheNames.map(name => name !== CACHE_NAME && caches.delete(name)));
+  }));
+  self.clients.claim();
+});
+
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+  event.respondWith(
+    caches.match(event.request).then(response => response || fetch(event.request))
+      .catch(() => caches.match('/'))
+  );
+});
+`;
+                const blob = new Blob([sw], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+                navigator.serviceWorker.register(swUrl).catch(e => console.log('SW registration failed:', e));
+            }
+        }
+
+        function setupEventListeners() {
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Enter' && document.activeElement.id === 'trade-ticker') {
+                    lookupPrice();
+                }
+            });
+        }
+
+        async function updateAllData() {
+            await Promise.all([updatePrices(), updateFearGreed(), updateNews()]);
+            updateUI();
+            checkConnection();
+        }
+
+        async function updatePrices() {
+            try {
+                const tickers = new Set();
+                Object.values(REAL_PORTFOLIO).forEach(fund => Object.keys(fund).forEach(t => tickers.add(t)));
+                Object.keys(appState.paperPositions).forEach(t => tickers.add(t));
+
+                for (const ticker of Array.from(tickers)) {
+                    const price = await fetchPrice(ticker);
+                    if (price) appState.priceCache[ticker] = price;
+                }
+                appState.lastPriceUpdate = Date.now();
+                saveState();
+            } catch (e) {
+                console.error('Price update failed:', e);
+            }
+        }
+
+        async function fetchPrice(ticker) {
+            const yahooCors = [
+                `https://corsproxy.io/?url=https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`,
+                `https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1d`
+            ];
+
+            for (const url of yahooCors) {
+                try {
+                    const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                    if (!resp.ok) continue;
+                    const data = await resp.json();
+                    const result = data.chart?.result?.[0];
+                    if (result?.meta?.regularMarketPrice) {
+                        return result.meta.regularMarketPrice;
+                    }
+                } catch (e) {
+                    console.log(`Failed ${ticker}:`, e.message);
+                }
+            }
+            return null;
+        }
+
+        async function updateFearGreed() {
+            try {
+                const now = Date.now();
+                if (now - appState.lastFearGreedUpdate < 300000) return;
+
+                const fearUrls = [
+                    'https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
+                    'https://corsproxy.io/?url=https://production.dataviz.cnn.io/index/fearandgreed/graphdata'
+                ];
+
+                for (const url of fearUrls) {
+                    try {
+                        const resp = await fetch(url, { signal: AbortSignal.timeout(5000) });
+                        if (!resp.ok) continue;
+                        const data = await resp.json();
+                        if (data.fear !== undefined) {
+                            appState.fearGreedCache = data;
+                            appState.lastFearGreedUpdate = now;
+                            saveState();
+                            return;
+                        }
+                    } catch (e) {
+                        console.log('Fear & Greed failed:', e.message);
+                    }
+                }
+            } catch (e) {
+                console.error('Fear & Greed update error:', e);
+            }
+        }
+
+        async function updateNews() {
+            try {
+                const now = Date.now();
+                if (now - appState.lastNewsUpdate < 600000) return;
+
+                appState.newsCache = [
+                    { title: 'Tech stocks surge on AI optimism', source: 'Yahoo Finance', time: 'nú sem þessu' },
+                    { title: 'S&P 500 reaches new highs', source: 'Reuters', time: '2 klst. síðan' },
+                    { title: 'Semiconductor sector recovery underway', source: 'Bloomberg', time: '4 klst. síðan' },
+                    { title: 'European markets advance', source: 'BBC', time: '6 klst. síðan' },
+                    { title: 'Apple releases Q2 earnings report', source: 'CNBC', time: '1 degi síðan' }
+                ];
+                appState.lastNewsUpdate = now;
+                saveState();
+            } catch (e) {
+                console.error('News update failed:', e);
+            }
+        }
+
+        function updateUI() {
+            updateOverview();
+            updateHoldings();
+            updateTradeUI();
+            updateMarket();
+            updateHistory();
+        }
+
+        function updateOverview() {
+            const realValue = calculateRealPortfolioValue();
+            const paperValue = calculatePaperPortfolioValue();
+            const totalValue = realValue + paperValue;
+
+            document.getElementById('total-value').textContent = formatCurrency(totalValue);
+            document.getElementById('real-value').textContent = formatCurrency(realValue);
+            document.getElementById('paper-value').textContent = formatCurrency(paperValue);
+
+            const totalReturn = ((totalValue - 50000) / 50000) * 100;
+            const returnEl = document.getElementById('total-return');
+            returnEl.textContent = (totalReturn >= 0 ? '+' : '') + totalReturn.toFixed(1) + '%';
+            returnEl.className = 'stat-value ' + (totalReturn >= 0 ? 'positive' : 'negative');
+
+            document.getElementById('active-trades').textContent = Object.keys(appState.paperPositions).length;
+            document.getElementById('paper-cash').textContent = formatCurrency(appState.paperCash);
+            document.getElementById('chart-timestamp').textContent = 'Endurlest: ' + formatTime(appState.lastPriceUpdate);
+
+            drawPortfolioChart(realValue, paperValue);
+            renderFearGreedGauge('fear-greed-container');
+        }
+
+        function updateHoldings() {
+            let realHTML = '';
+            Object.entries(REAL_PORTFOLIO).forEach(([fund, holdings]) => {
+                realHTML += `<div style="margin-bottom: 12px;"><div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 6px;">${fund}</div>`;
+                Object.entries(holdings).forEach(([ticker, qty]) => {
+                    const price = appState.priceCache[ticker] || 0;
+                    const value = price * qty;
+                    const change = calculateDailyChange(ticker);
+                    realHTML += `
+                        <div class="holding-row">
+                            <div class="holding-info">
+                                <div class="holding-ticker">${ticker}</div>
+                                <div class="holding-qty">${qty}</div>
+                            </div>
+                            <div class="holding-price">
+                                <div class="holding-current">${formatCurrency(value)}</div>
+                                <div class="holding-change ${change >= 0 ? 'positive' : 'negative'}">${(change >= 0 ? '+' : '') + change.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                realHTML += '</div>';
+            });
+            document.getElementById('real-holdings-container').innerHTML = realHTML || '<div style="color: var(--text-secondary);">Engar eignir</div>';
+
+            let paperHTML = '';
+            if (Object.keys(appState.paperPositions).length === 0) {
+                paperHTML = '<div style="color: var(--text-secondary);">Engar pappírseignir</div>';
+            } else {
+                Object.entries(appState.paperPositions).forEach(([ticker, qty]) => {
+                    const price = appState.priceCache[ticker] || 0;
+                    const value = price * qty;
+                    const change = calculateDailyChange(ticker);
+                    paperHTML += `
+                        <div class="holding-row">
+                            <div class="holding-info">
+                                <div class="holding-ticker">${ticker}</div>
+                                <div class="holding-qty">${qty} shluti</div>
+                            </div>
+                            <div class="holding-price">
+                                <div class="holding-current">${formatCurrency(value)}</div>
+                                <div class="holding-change ${change >= 0 ? 'positive' : 'negative'}">${(change >= 0 ? '+' : '') + change.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('paper-holdings-container').innerHTML = paperHTML;
+        }
+
+        function updateTradeUI() {
+            document.getElementById('available-cash').textContent = formatCurrency(appState.paperCash);
+            const recent = appState.trades.slice(-3);
+            if (recent.length > 0) {
+                document.getElementById('recent-trades').style.display = 'block';
+                let html = '';
+                recent.reverse().forEach(trade => {
+                    const typeClass = trade.type === 'buy' ? 'history-buy' : 'history-sell';
+                    const typeText = trade.type === 'buy' ? 'KAUP' : 'SALA';
+                    html += `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <span class="history-type ${typeClass}">${typeText}</span>
+                                <span class="stat-value">${formatCurrency(trade.price * trade.qty)}</span>
+                            </div>
+                            <div class="history-details">${trade.ticker} × ${trade.qty} @ ${formatCurrency(trade.price)}</div>
+                        </div>
+                    `;
+                });
+                document.getElementById('recent-trades-list').innerHTML = html;
+            } else {
+                document.getElementById('recent-trades').style.display = 'none';
+            }
+        }
+
+        function updateMarket() {
+            renderFearGreedGauge('market-fear-greed-container');
+            renderNewsFeed();
+        }
+
+        function updateHistory() {
+            const stats = calculateStats();
+            document.getElementById('total-trades').textContent = stats.total;
+            document.getElementById('wins-count').textContent = stats.wins;
+            document.getElementById('losses-count').textContent = stats.losses;
+            document.getElementById('win-rate').textContent = stats.winRate + '%';
+
+            const pnlEl = document.getElementById('total-pnl');
+            pnlEl.textContent = formatCurrency(stats.totalPnL);
+            pnlEl.className = 'stat-value ' + (stats.totalPnL >= 0 ? 'positive' : 'negative');
+
+            let historyHTML = '';
+            if (appState.trades.length === 0) {
+                historyHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 20px;">Engin viðskipti ennþá</div>';
+            } else {
+                appState.trades.slice().reverse().forEach(trade => {
+                    const typeClass = trade.type === 'buy' ? 'history-buy' : 'history-sell';
+                    const typeText = trade.type === 'buy' ? 'KAUP' : 'SALA';
+                    const pnl = trade.pnl ? formatCurrency(trade.pnl) : '-';
+                    historyHTML += `
+                        <div class="history-item">
+                            <div class="history-header">
+                                <span class="history-type ${typeClass}">${typeText}</span>
+                                <span class="stat-value">${formatCurrency(trade.price * trade.qty)}</span>
+                            </div>
+                            <div class="history-details">${trade.ticker} × ${trade.qty} @ ${formatCurrency(trade.price)} | P&L: ${pnl}</div>
+                            <div class="history-details" style="margin-top: 4px;">${new Date(trade.timestamp).toLocaleDateString('is-IS')}</div>
+                        </div>
+                    `;
+                });
+            }
+            document.getElementById('trade-history-container').innerHTML = historyHTML;
+        }
+
+        function drawPortfolioChart(realValue, paperValue) {
+            const ctx = document.getElementById('portfolio-chart');
+            if (!ctx) return;
+
+            if (portfolioChart) portfolioChart.destroy();
+
+            portfolioChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Raunveruleg (' + formatCurrency(realValue) + ')', 'Pappírsviðskipti (' + formatCurrency(paperValue) + ')'],
+                    datasets: [{
+                        data: [realValue, paperValue],
+                        backgroundColor: ['#58a6ff', '#3fb950'],
+                        borderColor: '#161b22',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: '#c9d1d9', padding: 16, font: { size: 12 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderFearGreedGauge(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            if (!appState.fearGreedCache) {
+                container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+                return;
+            }
+
+            const fear = appState.fearGreedCache.fear || 50;
+            const fearText = fear < 25 ? 'Mikill Ótti' : fear < 45 ? 'Ótti' : fear < 55 ? 'Hlutlaus' : fear < 75 ? 'Græðgi' : 'Mikil Græðgi';
+
+            container.innerHTML = `
+                <div class="fear-greed-value">${fear}</div>
+                <div class="fear-greed-text">${fearText}</div>
+            `;
+        }
+
+        function renderNewsFeed() {
+            const container = document.getElementById('news-container');
+            if (!container) return;
+
+            if (appState.newsCache.length === 0) {
+                container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+                return;
+            }
+
+            let html = '';
+            appState.newsCache.forEach(news => {
+                html += `
+                    <div class="news-item">
+                        <div class="news-title">${news.title}</div>
+                        <div class="news-meta">${news.source} · ${news.time}</div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        async function lookupPrice() {
+            const ticker = document.getElementById('trade-ticker').value.toUpperCase().trim();
+            if (!ticker) {
+                showToast('Sláðu inn hlutabréf');
+                return;
+            }
+
+            const priceInput = document.getElementById('trade-price');
+            priceInput.disabled = true;
+            priceInput.value = 'Flettir...';
+
+            const price = await fetchPrice(ticker);
+            if (price) {
+                appState.priceCache[ticker] = price;
+                priceInput.value = price.toFixed(2);
+                showToast(`${ticker}: ${formatCurrency(price)}`);
+            } else {
+                priceInput.value = '';
+                showToast('Gat ekki fundið verð');
+            }
+            priceInput.disabled = false;
+        }
+
+        function executeTrade(type) {
+            const ticker = document.getElementById('trade-ticker').value.toUpperCase().trim();
+            const qty = parseFloat(document.getElementById('trade-qty').value);
+            const price = parseFloat(document.getElementById('trade-price').value);
+
+            if (!ticker || !qty || qty <= 0 || !price || price <= 0) {
+                showToast('Fylltu inn allt');
+                return;
+            }
+
+            const cost = qty * price;
+
+            if (type === 'buy') {
+                if (cost > appState.paperCash) {
+                    showToast('Ekki nóg reiðufé');
+                    return;
+                }
+                appState.paperCash -= cost;
+                appState.paperPositions[ticker] = (appState.paperPositions[ticker] || 0) + qty;
+            } else {
+                if (!appState.paperPositions[ticker] || appState.paperPositions[ticker] < qty) {
+                    showToast('Ekki nóg hlutabréf');
+                    return;
+                }
+                appState.paperPositions[ticker] -= qty;
+                if (appState.paperPositions[ticker] <= 0) delete appState.paperPositions[ticker];
+                appState.paperCash += cost;
+            }
+
+            appState.trades.push({
+                type, ticker, qty, price,
+                timestamp: Date.now(),
+                pnl: null
+            });
+
+            saveState();
+            updateUI();
+            document.getElementById('trade-ticker').value = '';
+            document.getElementById('trade-qty').value = '';
+            document.getElementById('trade-price').value = '';
+            showToast((type === 'buy' ? 'Keypt ' : 'Selt ') + qty + ' × ' + ticker);
+        }
+
+        async function refreshPrices() {
+            showToast('Endurlest...');
+            await updatePrices();
+            updateUI();
+            showToast('Verð uppfærð');
+        }
+
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page-' + pageName).classList.add('active');
+
+            document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+            event.target.closest('.tab-button').classList.add('active');
+        }
+
+        function calculateRealPortfolioValue() {
+            let value = 0;
+            Object.values(REAL_PORTFOLIO).forEach(fund => {
+                Object.entries(fund).forEach(([ticker, qty]) => {
+                    value += (appState.priceCache[ticker] || 0) * qty;
+                });
+            });
+            return value;
+        }
+
+        function calculatePaperPortfolioValue() {
+            let value = appState.paperCash;
+            Object.entries(appState.paperPositions).forEach(([ticker, qty]) => {
+                value += (appState.priceCache[ticker] || 0) * qty;
+            });
+            return value;
+        }
+
+        function calculateDailyChange(ticker) {
+            const basePrice = REAL_PRICES[ticker] || 0;
+            const currentPrice = appState.priceCache[ticker] || basePrice;
+            return ((currentPrice - basePrice) / basePrice) * 100;
+        }
+
+        function calculateStats() {
+            let wins = 0, losses = 0, totalPnL = 0;
+            appState.trades.forEach(trade => {
+                if (trade.type === 'sell') {
+                    const buyTrade = appState.trades.find(t => t.type === 'buy' && t.ticker === trade.ticker);
+                    if (buyTrade) {
+                        const pnl = (trade.price - buyTrade.price) * trade.qty;
+                        if (pnl > 0) wins++;
+                        else if (pnl < 0) losses++;
+                        totalPnL += pnl;
+                    }
+                }
+            });
+            const total = wins + losses;
+            const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+            return { total: appState.trades.length, wins, losses, winRate, totalPnL };
+        }
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('is-IS', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+        }
+
+        function formatTime(timestamp) {
+            const now = Date.now();
+            const diff = Math.floor((now - timestamp) / 1000);
+            if (diff < 60) return 'nú';
+            if (diff < 3600) return Math.floor(diff / 60) + ' mín';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' klst';
+            return new Date(timestamp).toLocaleDateString('is-IS');
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        function checkConnection() {
+            const indicator = document.getElementById('status-indicator');
+            const text = document.getElementById('status-text');
+            const online = navigator.onLine;
+            if (online) {
+                indicator.classList.remove('offline');
+                text.textContent = 'Tengt';
+            } else {
+                indicator.classList.add('offline');
+                text.textContent = 'Ótengd';
+            }
+        }
+
+        function exportData() {
+            const data = {
+                appState,
+                exportDate: new Date().toISOString(),
+                realPortfolio: REAL_PORTFOLIO,
+                realPrices: REAL_PRICES
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'afb-data-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Gögn flutt út');
+        }
+
+        function clearAllData() {
+            if (confirm('Ertu viss um að þú viljir eyða öllum gögnum? Þetta er óendurkallanleg aðgerð.')) {
+                appState = {
+                    paperCash: 50000,
+                    paperPositions: {},
+                    trades: [],
+                    priceCache: { ...REAL_PRICES },
+                    lastPriceUpdate: Date.now(),
+                    fearGreedCache: null,
+                    lastFearGreedUpdate: 0,
+                    newsCache: [],
+                    lastNewsUpdate: 0
+                };
+                saveState();
+                updateUI();
+                showToast('Öll gögn eytt');
+            }
+        }
+
+        window.addEventListener('online', checkConnection);
+        window.addEventListener('offline', checkConnection);
+
+        init();
+    </script>
+</body>
+</html>
