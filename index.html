@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AFB Trading">
+    <meta name="theme-color" content="#0a0e14">
+    <title>AFB Trading</title>
+    <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22AFB%20Paper%20Trading%22%2C%22short_name%22%3A%22AFB%22%2C%22start_url%22%3A%22.%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%230a0e14%22%2C%22theme_color%22%3A%22%230a0e14%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%2520viewBox%3D%270%25200%2520512%2520512%27%253E%253Crect%2520fill%3D%27%25230a0e14%27%2520width%3D%27512%27%2520height%3D%27512%27%2520rx%3D%27100%27%2F%253E%253Ctext%2520x%3D%27256%27%2520y%3D%27340%27%2520font-size%3D%27220%27%2520font-weight%3D%27700%27%2520fill%3D%27%252300c896%27%2520text-anchor%3D%27middle%27%2520font-family%3D%27system-ui%27%253EAFB%253C%2Ftext%253E%253C%2Fsvg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%2C%22purpose%22%3A%22any%20maskable%22%7D%5D%7D">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%230a0e14' width='32' height='32' rx='6'/><text x='16' y='23' font-size='16' font-weight='700' fill='%2300c896' text-anchor='middle' font-family='system-ui'>A</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%230a0e14' width='180' height='180' rx='36'/><text x='90' y='125' font-size='90' font-weight='700' fill='%2300c896' text-anchor='middle' font-family='system-ui'>AFB</text></svg>">
+    <style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0e14;--card:#131820;--card2:#1a2030;--border:#1e2a3a;--t1:#e6edf3;--t2:#8b9ab5;--t3:#556070;--green:#00c896;--green-bg:rgba(0,200,150,.12);--red:#ff5c5c;--red-bg:rgba(255,92,92,.12);--blue:#4da6ff;--accent:#00c896;color-scheme:dark}
+html,body{height:100%;width:100%;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',Roboto,Helvetica,sans-serif;background:var(--bg);color:var(--t1);overflow:hidden;font-size:15px;-webkit-font-smoothing:antialiased}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;padding-top:env(safe-area-inset-top)}
+.page{display:none;flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px 16px;-webkit-overflow-scrolling:touch}
+.page.active{display:flex;flex-direction:column}
+.topbar{padding:12px 16px 8px;display:flex;justify-content:space-between;align-items:center}
+.topbar-title{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.topbar-status{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2)}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.dot.off{background:var(--red)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px}
+.card-label{font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px}
+.big-value{font-size:32px;font-weight:700;letter-spacing:-.5px;line-height:1.1}
+.sub-values{display:flex;gap:16px;margin-top:8px}
+.sub-val{font-size:13px;color:var(--t2)}
+.sub-val span{font-weight:600}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px}
+.stat-card .card-label{margin-bottom:4px}
+.stat-card .val{font-size:20px;font-weight:700}
+.fund-header{font-size:12px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.8px;padding:14px 0 8px;border-bottom:1px solid var(--border);margin-bottom:2px}
+.h-row{display:flex;align-items:center;padding:12px 0;border-bottom:1px solid rgba(30,42,58,.5)}
+.h-row:last-child{border-bottom:none}
+.h-icon{width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--blue);margin-right:12px;flex-shrink:0}
+.h-info{flex:1;min-width:0}
+.h-ticker{font-size:14px;font-weight:600;color:var(--t1)}
+.h-name{font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.h-right{text-align:right;flex-shrink:0}
+.h-price{font-size:14px;font-weight:600}
+.h-change{font-size:11px;font-weight:600;margin-top:1px}
+.fg-display{text-align:center;padding:16px 0}
+.fg-num{font-size:48px;font-weight:800;letter-spacing:-2px}
+.fg-label{font-size:13px;color:var(--t2);margin-top:4px}
+.fg-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--red),#f59e0b,var(--green));margin-top:12px;position:relative}
+.fg-marker{position:absolute;top:-4px;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid var(--bg);transform:translateX(-50%);transition:left .5s ease}
+.trade-form{display:flex;flex-direction:column;gap:10px}
+.input-wrap{position:relative}
+.input-wrap label{position:absolute;top:8px;left:12px;font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;pointer-events:none}
+.input-wrap input{width:100%;padding:28px 12px 10px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--t1);font-size:16px;font-family:inherit;outline:none;transition:border-color .2s}
+.input-wrap input:focus{border-color:var(--accent)}
+.btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:14px;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:opacity .15s;font-family:inherit}
+.btn:active{opacity:.7}
+.btn-buy{background:var(--green);color:#000}
+.btn-sell{background:var(--red);color:#fff}
+.btn-lookup{background:var(--card2);color:var(--blue);border:1px solid var(--border)}
+.news-item{padding:12px 0;border-bottom:1px solid rgba(30,42,58,.5);cursor:pointer}
+.news-item:last-child{border-bottom:none}
+.news-item:active{opacity:.7}
+.news-title{font-size:14px;font-weight:600;line-height:1.3;margin-bottom:3px}
+.news-meta{font-size:11px;color:var(--t3)}
+.news-tag{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-right:4px}
+.news-tag-stock{background:rgba(77,166,255,.15);color:var(--blue)}
+.news-tag-market{background:rgba(0,200,150,.12);color:var(--green)}
+.hist-item{background:var(--card2);border-radius:10px;padding:12px;margin-bottom:6px}
+.hist-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.hist-tag{font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px}
+.hist-buy{background:var(--green-bg);color:var(--green)}
+.hist-sell{background:var(--red-bg);color:var(--red)}
+.hist-detail{font-size:12px;color:var(--t2)}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;height:calc(56px + env(safe-area-inset-bottom));background:var(--card);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:none;background:none;color:var(--t3);cursor:pointer;font-size:10px;font-weight:600;letter-spacing:.3px;transition:color .2s;font-family:inherit;padding:0}
+.nav-btn.active{color:var(--accent)}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--card2);color:var(--t1);padding:10px 20px;border-radius:10px;border:1px solid var(--border);z-index:200;font-size:13px;font-weight:500;animation:toastIn .3s ease;white-space:nowrap}
+@keyframes toastIn{from{transform:translateX(-50%) translateY(10px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-center{display:flex;justify-content:center;padding:20px}
+.tab-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:4px}
+.tab-pill{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border);background:var(--card2);color:var(--t2);cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab-pill.active{background:var(--accent);color:#000;border-color:var(--accent)}
+@media(max-width:380px){.big-value{font-size:28px}.stat-card .val{font-size:17px}}
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="topbar">
+        <div class="topbar-title">AFB Trading</div>
+        <div class="topbar-status"><span class="dot" id="dot"></span><span id="status-text">Live</span></div>
+    </div>
+    <div id="page-overview" class="page active">
+        <div class="card">
+            <div class="card-label">Heildarvirdi eignasafns</div>
+            <div class="big-value" id="total-value">-</div>
+            <div class="sub-values">
+                <div class="sub-val">Raunverulegt: <span id="real-value">-</span></div>
+                <div class="sub-val">Pappir: <span id="paper-value">-</span></div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat-card"><div class="card-label">Reidhufe</div><div class="val" id="paper-cash" style="color:var(--green)">-</div></div>
+            <div class="stat-card"><div class="card-label">Opin vidskipti</div><div class="val" id="active-trades">0</div></div>
+            <div class="stat-card"><div class="card-label">Avoxtun</div><div class="val" id="total-return">0%</div></div>
+            <div class="stat-card"><div class="card-label">Otti / Graedgi</div><div class="val" id="fg-mini" style="color:var(--t2)">-</div></div>
+        </div>
+        <div class="card" style="margin-top:2px">
+            <div class="card-label">Otti og Graedgi visitala</div>
+            <div id="fg-display"><div class="loading-center"><div class="spinner"></div></div></div>
+        </div>
+        <div style="font-size:10px;color:var(--t3);text-align:right;padding:4px 0" id="last-update"></div>
+    </div>
+    <div id="page-holdings" class="page">
+        <div class="card" style="padding:12px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="card-label" style="margin:0">Eignir</div>
+                <button onclick="refreshPrices()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Uppfaera</button>
+            </div>
+        </div>
+        <div class="card" id="holdings-card"><div id="holdings-container"></div></div>
+        <div class="card"><div class="card-label">Pappirseignir</div><div id="paper-holdings-container"><div style="color:var(--t3);font-size:13px;padding:8px 0">Engar pappirseignir</div></div></div>
+    </div>
+    <div id="page-trade" class="page">
+        <div class="card">
+            <div class="card-label">Nytt vidskipti</div>
+            <div class="trade-form">
+                <div class="input-wrap"><label>Hlutabref</label><input type="text" id="trade-ticker" placeholder="AAPL" autocapitalize="characters" autocomplete="off" spellcheck="false"></div>
+                <div style="display:flex;gap:8px">
+                    <div class="input-wrap" style="flex:1"><label>Fjoldi</label><input type="number" id="trade-qty" placeholder="0" min="0.001" step="0.001" inputmode="decimal"></div>
+                    <div class="input-wrap" style="flex:1"><label>Verd (EUR)</label><input type="number" id="trade-price" placeholder="0.00" step="0.01" inputmode="decimal"></div>
+                </div>
+                <button class="btn btn-lookup" onclick="lookupPrice()">Fletta upp verdi</button>
+                <div class="btn-row">
+                    <button class="btn btn-buy" onclick="executeTrade('buy')">Kaupa</button>
+                    <button class="btn btn-sell" onclick="executeTrade('sell')">Selja</button>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="card-label" style="margin:0">Tiltaekt reidhufe</div>
+                <div style="font-size:20px;font-weight:700;color:var(--green)" id="available-cash">-</div>
+            </div>
+        </div>
+        <div class="card" id="recent-trades-card" style="display:none"><div class="card-label">Sidustu vidskipti</div><div id="recent-trades-list"></div></div>
+    </div>
+    <div id="page-market" class="page">
+        <div class="card"><div class="card-label">Otti og Graedgi visitala</div><div id="fg-display-market"><div class="loading-center"><div class="spinner"></div></div></div></div>
+        <div class="card">
+            <div class="card-label">Frettir</div>
+            <div class="tab-row" id="news-tabs">
+                <div class="tab-pill active" data-feed="all">Allar</div>
+                <div class="tab-pill" data-feed="market">Markadur</div>
+                <div class="tab-pill" data-feed="portfolio">Minar eignir</div>
+            </div>
+            <div id="news-container"><div class="loading-center"><div class="spinner"></div></div></div>
+        </div>
+    </div>
+    <div id="page-history" class="page">
+        <div class="stats" style="margin-bottom:10px">
+            <div class="stat-card"><div class="card-label">Vidskipti</div><div class="val" id="total-trades">0</div></div>
+            <div class="stat-card"><div class="card-label">Sigrar</div><div class="val" style="color:var(--green)" id="wins-count">0</div></div>
+            <div class="stat-card"><div class="card-label">Tap</div><div class="val" style="color:var(--red)" id="losses-count">0</div></div>
+            <div class="stat-card"><div class="card-label">P&amp;L</div><div class="val" id="total-pnl">-</div></div>
+        </div>
+        <div class="card"><div class="card-label">Vidskiptasaga</div><div id="trade-history-container"><div style="color:var(--t3);font-size:13px;text-align:center;padding:20px">Engin vidskipti</div></div></div>
+        <div class="card"><div class="card-label">Stillingar</div><div style="display:flex;gap:8px"><button class="btn btn-lookup" style="font-size:13px" onclick="exportData()">Flytja ut</button><button class="btn" style="font-size:13px;background:var(--red-bg);color:var(--red)" onclick="clearAllData()">Eyda gognum</button></div></div>
+    </div>
+    <div class="bottom-nav">
+        <button class="nav-btn active" data-page="overview"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span>Yfirlit</span></button>
+        <button class="nav-btn" data-page="holdings"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span>Eignir</span></button>
+        <button class="nav-btn" data-page="trade"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/><line x1="5" y1="5" x2="19" y2="5"/></svg><span>Vidskipti</span></button>
+        <button class="nav-btn" data-page="market"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span>Markadur</span></button>
+        <button class="nav-btn" data-page="history"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Saga</span></button>
+    </div>
+</div>
+<script>
+var PORTFOLIO = {
+    'AFB Growth Fund':{GOOGL:288.78,NVDA:269.21,AAPL:179.54,ASML:184.46,AVGO:234.28,MSFT:182.57,TSM:215.85,AMZN:177.99,AMD:218.33,PLTR:132.78,AXP:81.04,CRWD:99.07,JNJ:83.95,JPM:89.34,META:81.20,MU:131.04,NVO:88.53,UNH:118.67,URNM:88.93,WMT:90.06,LMT:49.81,PEP:55.08,'RR.L':58.25,TEM:61.47,VST:64.37,KO:29.29},
+    'AI Long Term':{MU:47.42,LRCX:35.42,RKLB:33.96,TSM:35.50,ONDS:28.43,CAMT:23.24,UUUU:19.47,KTOS:13.15,TOELY:21.87,UBER:18.60,GEHC:10.95,FROG:14.40,NOK:28.40,ORCL:18.20,RR:11.40,CEG:13.41,ALAB:10.47,BBAI:6.37,BITM:8.69,NBIS:12.80,PEGA:6.67,SNOW:6.31},
+    'AFB Safe Fund':{VUSA:122.03,VWRL:104.15,EQQQ:73.10,ICLN:26.84,IWDP:13.58,IHCS:12.28},
+    'Standalone':{RR:101.00,OPEN:1.33}
+};
+
+// Company names for news search
+var NAMES={GOOGL:'Alphabet Google',NVDA:'Nvidia',AAPL:'Apple',ASML:'ASML',AVGO:'Broadcom',MSFT:'Microsoft',TSM:'TSMC Taiwan Semiconductor',AMZN:'Amazon',AMD:'AMD',PLTR:'Palantir',META:'Meta Facebook',MU:'Micron',UNH:'UnitedHealth',CRWD:'CrowdStrike',NVO:'Novo Nordisk',RKLB:'Rocket Lab',NOK:'Nokia',CEG:'Constellation Energy',NBIS:'Nebius',LRCX:'Lam Research'};
+
+// Top tickers to fetch news for
+var NEWS_TICKERS=['NVDA','GOOGL','AAPL','MSFT','AMZN','ASML','TSM','AMD','META','AVGO','PLTR','MU','CRWD','RKLB'];
+
+var BASE_PRICES={};
+Object.values(PORTFOLIO).forEach(function(f){Object.entries(f).forEach(function(e){if(!BASE_PRICES[e[0]])BASE_PRICES[e[0]]=e[1]})});
+
+var S={cash:50000,positions:{},trades:[],prices:Object.assign({},BASE_PRICES),lastPrice:Date.now(),fg:null,lastFg:0,marketNews:[],stockNews:[],lastNews:0,newsFeed:'all'};
+
+function init(){
+    loadState();
+    setupNav();
+    setupNewsTabs();
+    updateUI();
+    setTimeout(fetchAll,100);
+    setInterval(fetchAll,120000);
+    setupSW();
+}
+
+function loadState(){try{var s=localStorage.getItem('afb_v2');if(s){var p=JSON.parse(s);S=Object.assign({},S,p)}}catch(e){}}
+function saveState(){try{localStorage.setItem('afb_v2',JSON.stringify(S))}catch(e){}}
+
+function setupNav(){
+    var btns=document.querySelectorAll('.nav-btn');
+    for(var i=0;i<btns.length;i++){btns[i].addEventListener('click',function(){
+        var page=this.getAttribute('data-page');
+        var pages=document.querySelectorAll('.page');for(var j=0;j<pages.length;j++)pages[j].classList.remove('active');
+        document.getElementById('page-'+page).classList.add('active');
+        var nb=document.querySelectorAll('.nav-btn');for(var k=0;k<nb.length;k++)nb[k].classList.remove('active');
+        this.classList.add('active');
+    })}
+    document.getElementById('trade-ticker').addEventListener('keydown',function(e){if(e.key==='Enter')lookupPrice()});
+}
+
+function setupNewsTabs(){
+    var tabs=document.querySelectorAll('.tab-pill');
+    for(var i=0;i<tabs.length;i++){tabs[i].addEventListener('click',function(){
+        var pills=document.querySelectorAll('.tab-pill');for(var j=0;j<pills.length;j++)pills[j].classList.remove('active');
+        this.classList.add('active');
+        S.newsFeed=this.getAttribute('data-feed');
+        renderNews();
+    })}
+}
+
+// ── FETCH ALL ──
+function fetchAll(){
+    updateConnection();
+    Promise.all([fetchPrices().catch(function(){}),fetchFG().catch(function(){}),fetchAllNews().catch(function(){})]).then(function(){
+        updateUI();S.lastPrice=Date.now();saveState();
+    });
+}
+
+// ── PRICES via Yahoo Finance ──
+function fetchPrices(){
+    var tickers={};
+    Object.values(PORTFOLIO).forEach(function(f){Object.keys(f).forEach(function(t){tickers[t]=1})});
+    Object.keys(S.positions).forEach(function(t){tickers[t]=1});
+    var arr=Object.keys(tickers);
+    function batch(si){
+        if(si>=arr.length)return Promise.resolve();
+        var b=arr.slice(si,si+8);
+        return Promise.all(b.map(function(t){return fetchPrice(t).then(function(p){if(p)S.prices[t]=p}).catch(function(){})})).then(function(){return batch(si+8)});
+    }
+    return batch(0);
+}
+
+function fetchPrice(ticker){
+    var urls=['https://corsproxy.io/?url='+encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+ticker+'?interval=1d&range=1d'),
+        'https://api.allorigins.win/raw?url='+encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/'+ticker+'?interval=1d&range=1d')];
+    function tryUrl(idx){
+        if(idx>=urls.length)return Promise.resolve(null);
+        return new Promise(function(resolve){
+            var controller=new AbortController();var timer=setTimeout(function(){controller.abort()},4000);
+            fetch(urls[idx],{signal:controller.signal}).then(function(r){
+                clearTimeout(timer);if(!r.ok)return resolve(tryUrl(idx+1));
+                return r.json().then(function(d){
+                    var p=d&&d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta&&d.chart.result[0].meta.regularMarketPrice;
+                    resolve(p||tryUrl(idx+1));
+                }).catch(function(){resolve(tryUrl(idx+1))});
+            }).catch(function(){clearTimeout(timer);resolve(tryUrl(idx+1))});
+        });
+    }
+    return tryUrl(0);
+}
+
+// ── FEAR & GREED INDEX ──
+function fetchFG(){
+    if(Date.now()-S.lastFg<300000&&S.fg)return Promise.resolve();
+    var urls=['https://production.dataviz.cnn.io/index/fearandgreed/graphdata',
+        'https://corsproxy.io/?url='+encodeURIComponent('https://production.dataviz.cnn.io/index/fearandgreed/graphdata')];
+    function tryFG(idx){
+        if(idx>=urls.length)return Promise.resolve();
+        return new Promise(function(resolve){
+            var controller=new AbortController();var timer=setTimeout(function(){controller.abort()},5000);
+            fetch(urls[idx],{signal:controller.signal}).then(function(r){
+                clearTimeout(timer);if(!r.ok)return resolve(tryFG(idx+1));
+                return r.json().then(function(d){
+                    if(d.fear_and_greed){S.fg=d.fear_and_greed;S.lastFg=Date.now()}
+                    else if(d.fear!==undefined){S.fg=d;S.lastFg=Date.now()}
+                    resolve();
+                }).catch(function(){resolve(tryFG(idx+1))});
+            }).catch(function(){clearTimeout(timer);resolve(tryFG(idx+1))});
+        });
+    }
+    return tryFG(0);
+}
+
+// ── NEWS: Google News RSS via allorigins proxy ──
+function fetchAllNews(){
+    if(Date.now()-S.lastNews<600000&&(S.marketNews.length||S.stockNews.length))return Promise.resolve();
+    return Promise.all([
+        fetchRSSNews('stock+market+today','market').catch(function(){return[]}),
+        fetchStockNews().catch(function(){return[]})
+    ]).then(function(results){
+        S.marketNews=results[0]||[];
+        S.stockNews=results[1]||[];
+        S.lastNews=Date.now();
+    });
+}
+
+function fetchRSSNews(query,tag){
+    var rssUrl='https://news.google.com/rss/search?q='+encodeURIComponent(query)+'&hl=en&gl=US&ceid=US:en';
+    var proxyUrl='https://api.allorigins.win/raw?url='+encodeURIComponent(rssUrl);
+    return fetch(proxyUrl,{signal:AbortSignal.timeout(8000)}).then(function(r){
+        if(!r.ok)throw new Error('fail');
+        return r.text();
+    }).then(function(xml){
+        return parseRSS(xml,tag);
+    });
+}
+
+function fetchStockNews(){
+    // Fetch news for top 5 portfolio holdings
+    var top=NEWS_TICKERS.slice(0,5);
+    var queries=top.map(function(t){
+        var name=NAMES[t]||t;
+        return name+' stock';
+    });
+    var combined=queries.join(' OR ');
+    return fetchRSSNews(combined,'stock');
+}
+
+function parseRSS(xml,tag){
+    var items=[];
+    try{
+        var parser=new DOMParser();
+        var doc=parser.parseFromString(xml,'text/xml');
+        var entries=doc.querySelectorAll('item');
+        for(var i=0;i<Math.min(entries.length,15);i++){
+            var item=entries[i];
+            var title=item.querySelector('title');
+            var link=item.querySelector('link');
+            var pubDate=item.querySelector('pubDate');
+            var source=item.querySelector('source');
+            if(title){
+                var titleText=title.textContent||'';
+                // Find which ticker this might be about
+                var matchedTicker=null;
+                Object.entries(NAMES).forEach(function(e){
+                    var parts=e[1].split(' ');
+                    for(var p=0;p<parts.length;p++){
+                        if(parts[p].length>2&&titleText.toLowerCase().indexOf(parts[p].toLowerCase())!==-1){
+                            matchedTicker=e[0];
+                        }
+                    }
+                });
+                items.push({
+                    title:titleText,
+                    link:link?link.textContent:'',
+                    source:source?source.textContent:'Google News',
+                    time:pubDate?timeAgo(new Date(pubDate.textContent)):'',
+                    tag:tag,
+                    ticker:matchedTicker
+                });
+            }
+        }
+    }catch(e){}
+    return items;
+}
+
+function timeAgo(date){
+    var sec=Math.floor((Date.now()-date.getTime())/1000);
+    if(sec<60)return'nuna';
+    if(sec<3600)return Math.floor(sec/60)+' min';
+    if(sec<86400)return Math.floor(sec/3600)+' klst';
+    return Math.floor(sec/86400)+' d';
+}
+
+// ── UI UPDATES ──
+function updateUI(){
+    try{updateOverview()}catch(e){console.error('overview',e)}
+    try{updateHoldings()}catch(e){console.error('holdings',e)}
+    try{updateTrade()}catch(e){console.error('trade',e)}
+    try{updateMarket()}catch(e){console.error('market',e)}
+    try{updateHistory()}catch(e){console.error('history',e)}
+}
+
+function updateOverview(){
+    var rv=calcReal(),pv=calcPaper(),tv=rv+pv;
+    el('total-value').textContent=fmt(tv);
+    el('real-value').textContent=fmt(rv);
+    el('paper-value').textContent=fmt(pv);
+    el('active-trades').textContent=Object.keys(S.positions).length;
+    el('paper-cash').textContent=fmt(S.cash);
+    var ret=((pv-50000)/50000*100);
+    var retEl=el('total-return');
+    retEl.textContent=(ret>=0?'+':'')+ret.toFixed(1)+'%';
+    retEl.style.color=ret>=0?'var(--green)':'var(--red)';
+    renderFG('fg-display');
+    var fgMini=el('fg-mini');
+    if(S.fg){
+        var v=getFGValue();
+        fgMini.textContent=Math.round(v);
+        fgMini.style.color=v<40?'var(--red)':v>60?'var(--green)':'var(--t2)';
+    }
+    el('last-update').textContent='Uppfaert: '+fmtTime(S.lastPrice);
+}
+
+function getFGValue(){
+    if(!S.fg)return 50;
+    if(typeof S.fg.score==='number')return S.fg.score;
+    if(typeof S.fg.fear==='number')return S.fg.fear;
+    if(S.fg.fear_and_greed&&typeof S.fg.fear_and_greed.score==='number')return S.fg.fear_and_greed.score;
+    return 50;
+}
+function getFGRating(){
+    if(!S.fg)return '';
+    if(S.fg.rating)return S.fg.rating;
+    var v=getFGValue();
+    if(v<25)return'Extreme Fear';if(v<45)return'Fear';if(v<55)return'Neutral';if(v<75)return'Greed';return'Extreme Greed';
+}
+
+function updateHoldings(){
+    var html='';
+    Object.entries(PORTFOLIO).forEach(function(entry){
+        var fund=entry[0],holdings=entry[1];
+        html+='<div class="fund-header">'+fund+'</div>';
+        Object.entries(holdings).forEach(function(h){
+            var ticker=h[0],baseVal=h[1],price=S.prices[ticker]||baseVal;
+            var change=((price-baseVal)/baseVal*100);
+            var color=change>=0?'var(--green)':'var(--red)';
+            var initials=ticker.replace('.L','').substring(0,3);
+            html+='<div class="h-row"><div class="h-icon">'+initials+'</div><div class="h-info"><div class="h-ticker">'+ticker+'</div><div class="h-name">'+fund+'</div></div><div class="h-right"><div class="h-price">'+fmt(price)+'</div><div class="h-change" style="color:'+color+'">'+(change>=0?'+':'')+change.toFixed(2)+'%</div></div></div>';
+        });
+    });
+    el('holdings-container').innerHTML=html;
+    var pp=Object.entries(S.positions);
+    if(!pp.length){el('paper-holdings-container').innerHTML='<div style="color:var(--t3);font-size:13px;padding:8px 0">Engar pappirseignir</div>'}
+    else{var ph='';pp.forEach(function(e){var ticker=e[0],qty=e[1],price=S.prices[ticker]||0,val=price*qty;ph+='<div class="h-row"><div class="h-icon">'+ticker.substring(0,3)+'</div><div class="h-info"><div class="h-ticker">'+ticker+'</div><div class="h-name">'+qty+' hlutir</div></div><div class="h-right"><div class="h-price">'+fmt(val)+'</div></div></div>'});el('paper-holdings-container').innerHTML=ph}
+}
+
+function updateTrade(){
+    el('available-cash').textContent=fmt(S.cash);
+    var recent=S.trades.slice(-3).reverse();
+    if(recent.length){el('recent-trades-card').style.display='block';var h='';recent.forEach(function(t){var cls=t.type==='buy'?'hist-buy':'hist-sell';var txt=t.type==='buy'?'KAUP':'SALA';h+='<div class="hist-item"><div class="hist-top"><span class="hist-tag '+cls+'">'+txt+'</span><span style="font-weight:600">'+fmt(t.price*t.qty)+'</span></div><div class="hist-detail">'+t.ticker+' x '+t.qty+' @ '+fmt(t.price)+'</div></div>'});el('recent-trades-list').innerHTML=h}
+    else{el('recent-trades-card').style.display='none'}
+}
+
+function updateMarket(){
+    renderFG('fg-display-market');
+    renderNews();
+}
+
+function updateHistory(){
+    var stats=calcStats();
+    el('total-trades').textContent=stats.total;el('wins-count').textContent=stats.wins;el('losses-count').textContent=stats.losses;
+    var pnlEl=el('total-pnl');pnlEl.textContent=fmt(stats.pnl);pnlEl.style.color=stats.pnl>=0?'var(--green)':'var(--red)';
+    if(!S.trades.length){el('trade-history-container').innerHTML='<div style="color:var(--t3);font-size:13px;text-align:center;padding:20px">Engin vidskipti</div>'}
+    else{var h='';S.trades.slice().reverse().forEach(function(t){var cls=t.type==='buy'?'hist-buy':'hist-sell';var txt=t.type==='buy'?'KAUP':'SALA';h+='<div class="hist-item"><div class="hist-top"><span class="hist-tag '+cls+'">'+txt+'</span><span style="font-weight:600">'+fmt(t.price*t.qty)+'</span></div><div class="hist-detail">'+t.ticker+' x '+t.qty+' @ '+fmt(t.price)+' · '+new Date(t.timestamp).toLocaleDateString('is-IS')+'</div></div>'});el('trade-history-container').innerHTML=h}
+}
+
+function renderFG(containerId){
+    var c=el(containerId);if(!c)return;
+    if(!S.fg){c.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';return}
+    var v=Math.round(getFGValue());
+    var rating=getFGRating();
+    var label=v<25?'Mikill otti':v<45?'Otti':v<55?'Hlutlaust':v<75?'Graedgi':'Mikil graedgi';
+    var color=v<30?'var(--red)':v<45?'#f59e0b':v<55?'var(--t2)':'var(--green)';
+    c.innerHTML='<div class="fg-display"><div class="fg-num" style="color:'+color+'">'+v+'</div><div class="fg-label">'+label+(rating?' ('+rating+')':'')+'</div><div class="fg-bar"><div class="fg-marker" style="left:'+v+'%"></div></div></div>';
+}
+
+function renderNews(){
+    var container=el('news-container');if(!container)return;
+    var all=[];
+    if(S.newsFeed==='all'||S.newsFeed==='market'){
+        S.marketNews.forEach(function(n){all.push(n)});
+    }
+    if(S.newsFeed==='all'||S.newsFeed==='portfolio'){
+        S.stockNews.forEach(function(n){all.push(n)});
+    }
+    // Deduplicate by title
+    var seen={};
+    all=all.filter(function(n){
+        var k=n.title.substring(0,40);
+        if(seen[k])return false;
+        seen[k]=true;return true;
+    });
+    // Sort: most recent first (by time string approximation)
+    all=all.slice(0,20);
+
+    if(!all.length){
+        container.innerHTML='<div class="loading-center"><div class="spinner"></div></div>';
+        return;
+    }
+    var h='';
+    all.forEach(function(n){
+        var tagHTML='';
+        if(n.ticker){tagHTML='<span class="news-tag news-tag-stock">'+n.ticker+'</span>'}
+        else if(n.tag==='market'){tagHTML='<span class="news-tag news-tag-market">Market</span>'}
+        var onclick=n.link?'onclick="window.open(\''+n.link.replace(/'/g,"\\'")+"','_blank')\"":"";
+        h+='<div class="news-item" '+onclick+'><div class="news-title">'+tagHTML+n.title+'</div><div class="news-meta">'+n.source+(n.time?' · '+n.time:'')+'</div></div>';
+    });
+    container.innerHTML=h;
+}
+
+// ── TRADE ACTIONS ──
+function lookupPrice(){
+    var ticker=el('trade-ticker').value.toUpperCase().trim();
+    if(!ticker){toast('Sladu inn hlutabref');return}
+    var inp=el('trade-price');inp.value='';inp.placeholder='Leitar...';
+    fetchPrice(ticker).then(function(price){
+        if(price){S.prices[ticker]=price;inp.value=price.toFixed(2);toast(ticker+': '+fmt(price))}
+        else{inp.placeholder='0.00';toast('Gat ekki fundid verd')}
+    });
+}
+
+function executeTrade(type){
+    var ticker=el('trade-ticker').value.toUpperCase().trim();
+    var qty=parseFloat(el('trade-qty').value);var price=parseFloat(el('trade-price').value);
+    if(!ticker||!qty||qty<=0||!price||price<=0){toast('Fylltu inn oll svaedi');return}
+    var cost=qty*price;
+    if(type==='buy'){if(cost>S.cash){toast('Ekki nog reidhufe');return}S.cash-=cost;S.positions[ticker]=(S.positions[ticker]||0)+qty}
+    else{if(!S.positions[ticker]||S.positions[ticker]<qty){toast('Ekki nog hlutabref');return}S.positions[ticker]-=qty;if(S.positions[ticker]<=0)delete S.positions[ticker];S.cash+=cost}
+    S.trades.push({type:type,ticker:ticker,qty:qty,price:price,timestamp:Date.now()});
+    saveState();updateUI();el('trade-ticker').value='';el('trade-qty').value='';el('trade-price').value='';
+    toast((type==='buy'?'Keypt ':'Selt ')+qty+' x '+ticker);
+}
+
+function refreshPrices(){toast('Uppfaeri verd...');fetchPrices().then(function(){S.lastPrice=Date.now();saveState();updateUI();toast('Verd uppfaerd!')})}
+
+// ── HELPERS ──
+function calcReal(){var v=0;Object.values(PORTFOLIO).forEach(function(f){Object.entries(f).forEach(function(e){v+=(S.prices[e[0]]||e[1])})});return v}
+function calcPaper(){var v=S.cash;Object.entries(S.positions).forEach(function(e){v+=(S.prices[e[0]]||0)*e[1]});return v}
+function calcStats(){var w=0,l=0,pnl=0;S.trades.forEach(function(t){if(t.type==='sell'){var buy=null;for(var i=0;i<S.trades.length;i++){if(S.trades[i].type==='buy'&&S.trades[i].ticker===t.ticker){buy=S.trades[i];break}}if(buy){var p=(t.price-buy.price)*t.qty;if(p>0)w++;else if(p<0)l++;pnl+=p}}});return{total:S.trades.length,wins:w,losses:l,pnl:pnl}}
+function fmt(v){return new Intl.NumberFormat('is-IS',{style:'currency',currency:'EUR',minimumFractionDigits:0,maximumFractionDigits:2}).format(v)}
+function fmtTime(ts){var d=Math.floor((Date.now()-ts)/1000);if(d<60)return'nuna';if(d<3600)return Math.floor(d/60)+' min';if(d<86400)return Math.floor(d/3600)+' klst';return new Date(ts).toLocaleDateString('is-IS')}
+function el(id){return document.getElementById(id)}
+function toast(msg){var t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){t.remove()},300)},2000)}
+function updateConnection(){var on=navigator.onLine;el('dot').className='dot'+(on?'':' off');el('status-text').textContent=on?'Live':'Offline'}
+function exportData(){var d=JSON.stringify({state:S,portfolio:PORTFOLIO,exported:new Date().toISOString()},null,2);var b=new Blob([d],{type:'application/json'});var a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='afb-export-'+new Date().toISOString().split('T')[0]+'.json';a.click();toast('Gogn flutt ut')}
+function clearAllData(){if(!confirm('Eyda ollum gognum?'))return;S={cash:50000,positions:{},trades:[],prices:Object.assign({},BASE_PRICES),lastPrice:Date.now(),fg:null,lastFg:0,marketNews:[],stockNews:[],lastNews:0,newsFeed:'all'};saveState();updateUI();toast('Oll gogn eytt')}
+function setupSW(){if(!('serviceWorker' in navigator))return;try{var sw="self.addEventListener('install',function(){self.skipWaiting()});self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim())});self.addEventListener('fetch',function(e){if(e.request.method==='GET')e.respondWith(fetch(e.request).catch(function(){return caches.match(e.request)}))});";navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(function(){})}catch(e){}}
+window.addEventListener('online',updateConnection);
+window.addEventListener('offline',updateConnection);
+init();
+</script>
+</body>
+</html>
